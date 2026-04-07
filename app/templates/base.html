@@ -4,7 +4,34 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}BookShare{% endblock %} — Share Books, Share Knowledge</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}" />
+    <link rel="icon" type="image/png" sizes="16x16"
+        href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}" />
+    <link rel="icon" type="image/png" sizes="32x32"
+        href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}" />
+    <link rel="apple-touch-icon" sizes="180x180"
+        href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}" />
+    <link rel="manifest" href="{{ url_for('static', filename='favicon/site.webmanifest') }}" />
+    <link rel="icon" type="image/png" sizes="192x192"
+        href="{{ url_for('static', filename='favicon/android-chrome-192x192.png') }}" />
+    <link rel="icon" type="image/png" sizes="512x512"
+        href="{{ url_for('static', filename='favicon/android-chrome-512x512.png') }}" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="BookShare – Community Book Sharing Platform">
+    <meta property="og:description"
+        content="Borrow and share books with readers in your community. Physical & digital books.">
+    <meta property="og:image" content="{{ url_for('static', filename='images/og-image.jpg', _external=True) }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BookShare – Community Book Sharing Platform">
+    <meta name="twitter:description"
+        content="Borrow and share books with readers in your community. Physical & digital books.">
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/og-image.jpg', _external=True) }}">
+    <title>{% block title %}BookShare{% endblock %} | Share Books, Share Knowledge</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
     {% block head %}{% endblock %}
 </head>
