@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <svg width="48" height="48" viewBox="0 0 28 28" fill="none">
+                <rect width="28" height="28" rx="8" fill="#1a6b45" />
+                <rect x="6" y="7" width="10" height="14" rx="2" fill="white" opacity="0.9" />
+                <rect x="12" y="7" width="10" height="14" rx="2" fill="white" opacity="0.6" />
+            </svg>
+        </div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Join BookShare and start sharing books</p>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <div class="input-wrap">
+                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input type="text" id="name" name="name" placeholder="Ali Ahmed"
+                        value="{{ form_data.get('name', '') }}" required autocomplete="name"
+                        class="{{ 'input-error' if errors.get('name') }}" />
+                </div>
+                {% if errors.get('name') %}
+                <span class="field-error">{{ errors.name }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrap">
+                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    <input type="email" id="email" name="email" placeholder="you@example.com"
+                        value="{{ form_data.get('email', '') }}" required autocomplete="email"
+                        class="{{ 'input-error' if errors.get('email') }}" />
+                </div>
+                {% if errors.get('email') %}
+                <span class="field-error">{{ errors.email }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <input type="password" id="password" name="password" placeholder="Min. 8 characters" required
+                        autocomplete="new-password" class="{{ 'input-error' if errors.get('password') }}" />
+                    <button type="button" class="toggle-pw" onclick="togglePassword('password', this)" tabindex="-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+                {% if errors.get('password') %}
+                <span class="field-error">{{ errors.password }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <div class="input-wrap">
+                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                        placeholder="Repeat your password" required autocomplete="new-password"
+                        class="{{ 'input-error' if errors.get('confirm_password') }}" />
+                    <button type="button" class="toggle-pw" onclick="togglePassword('confirm_password', this)"
+                        tabindex="-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+                {% if errors.get('confirm_password') %}
+                <span class="field-error">{{ errors.confirm_password }}</span>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+        </form>
+
+        <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+    </div>
+</div>
+{% endblock %}

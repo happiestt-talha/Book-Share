@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>My Profile</h1>
+        <p>Update your personal information</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-avatar-section">
+            <div class="profile-avatar-large">{{ current_user.name[0].upper() }}</div>
+            <div>
+                <h2>{{ current_user.name }}</h2>
+                <span class="badge badge-{{ 'admin' if current_user.is_admin() else 'member' }}">
+                    {{ current_user.role | capitalize }}
+                </span>
+                <p class="profile-joined">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.profile') }}" class="profile-form">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" value="{{ current_user.name }}" required />
+                    {% if errors and errors.get('name') %}
+                    <span class="field-error">{{ errors.name }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" value="{{ current_user.email }}" disabled class="input-disabled" />
+                    <span class="field-hint">Email cannot be changed</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number <span class="optional">(optional)</span></label>
+                    <input type="text" id="phone" name="phone"
+                        value="{{ current_user.phone if current_user.phone else '' }}" placeholder="+92 300 1234567" />
+                    {% if errors and errors.get('phone') %}
+                    <span class="field-error">{{ errors.phone }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="city">City <span class="optional">(optional)</span></label>
+                    <input type="text" id="city" name="city"
+                        value="{{ current_user.city if current_user.city else '' }}" placeholder="Lahore, Pakistan" />
+                    {% if errors and errors.get('city') %}
+                    <span class="field-error">{{ errors.city }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
