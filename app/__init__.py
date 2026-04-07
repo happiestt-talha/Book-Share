@@ -29,6 +29,10 @@ def create_app():
     app.register_blueprint(borrow_bp)
     app.register_blueprint(admin_bp)
 
+    @app.route('/')
+    def index():
+        return "<h1>BookShare is live!</h1><p>Your app is working.</p>"
+
     return app
 
 
