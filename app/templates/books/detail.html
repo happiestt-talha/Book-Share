@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="detail-layout">
+
+        <!-- LEFT: Cover + Actions -->
+        <div class="detail-left">
+            <div class="detail-cover" style="background: {{ loop_color(book.id % 12) }}">
+                <div class="detail-cover-title">{{ book.title }}</div>
+                <div class="detail-cover-author">{{ book.author }}</div>
+            </div>
+
+            <div class="detail-actions">
+                {% if current_user.is_authenticated %}
+                {% if book.owner_id == current_user.id %}
+                <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-ghost btn-full">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Edit Book
+                </a>
+                <form method="POST" action="{{ url_for('books.delete_book', book_id=book.id) }}"
+                    onsubmit="return confirm('Delete this book? This cannot be undone.')">
+                    <button type="submit" class="btn btn-danger btn-full">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4h6v2" />
+                        </svg>
+                        Delete Book
+                    </button>
+                </form>
+
+                {% elif book.status == 'available' and not already_requested %}
+                <button class="btn btn-primary btn-full btn-lg" onclick="openBorrowModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    Request to Borrow
+                </button>
+
+                {% elif already_requested %}
+                <div class="info-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    You have a pending request for this book.
+                </div>
+
+                {% elif book.status == 'borrowed' %}
+                <div class="info-box info-box-warning">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    This book is currently borrowed.
+                </div>
+                {% endif %}
+
+                {% if book.book_type == 'digital' and book.file_link and not book.file_link.startswith('http') %}
+                {% set is_accepted_borrower = false %}
+                {# file access handled by serve_file route #}
+                {% endif %}
+
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-full btn-lg">
+                    Login to Request
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Book Info -->
+        <div class="detail-right">
+            <div class="detail-badges">
+                <span class="badge badge-{{ book.book_type }}">
+                    {% if book.book_type == 'physical' %}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-right:3px">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    {% else %}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-right:3px">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                        <polyline points="13 2 13 9 20 9" />
+                    </svg>
+                    {% endif %}
+                    {{ book.book_type | capitalize }}
+                </span>
+                <span class="badge badge-{{ book.status }}">{{ book.status | capitalize }}</span>
+                <span class="badge badge-member">{{ book.category }}</span>
+            </div>
+
+            <h1 class="detail-title">{{ book.title }}</h1>
+            <p class="detail-author">by <strong>{{ book.author }}</strong></p>
+
+            <div class="detail-meta-grid">
+                <div class="meta-item">
+                    <span class="meta-label">Category</span>
+                    <span class="meta-value">{{ book.category }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Type</span>
+                    <span class="meta-value">{{ book.book_type | capitalize }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Status</span>
+                    <span class="meta-value">{{ book.status | capitalize }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Listed on</span>
+                    <span class="meta-value">{{ book.created_at.strftime('%d %b %Y') }}</span>
+                </div>
+            </div>
+
+            {% if book.book_type == 'physical' and book.location %}
+            <div class="detail-location">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                <div>
+                    <span class="meta-label">Pickup Location</span>
+                    <span class="meta-value">{{ book.location }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if book.book_type == 'digital' and book.file_link %}
+            <div class="detail-location">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                    <polyline points="13 2 13 9 20 9" />
+                </svg>
+                <div>
+                    <span class="meta-label">Digital Book</span>
+                    {% if book.file_link.startswith('http') %}
+                    <a href="{{ book.file_link }}" target="_blank" class="meta-value">External download link</a>
+                    {% else %}
+                    <span class="meta-value">PDF available after request approval</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="detail-owner-card">
+                <div class="owner-avatar">{{ book.owner.name[0].upper() }}</div>
+                <div>
+                    <span class="meta-label">Shared by</span>
+                    <div class="owner-name">{{ book.owner.name }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BORROW MODAL -->
+{% if current_user.is_authenticated and book.owner_id != current_user.id and book.status == 'available' %}
+<div class="modal-overlay" id="borrowModal" onclick="closeBorrowModal(event)">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Request to Borrow</h2>
+            <button class="modal-close" onclick="closeBorrowModal()">&times;</button>
+        </div>
+
+        <div class="modal-book-info">
+            <strong>{{ book.title }}</strong>
+            <span>by {{ book.author }}</span>
+            <span class="badge badge-{{ book.book_type }}" style="margin-top:0.25rem;">{{ book.book_type | capitalize
+                }}</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('borrow.request_borrow', book_id=book.id) }}">
+
+            {% if book.book_type == 'physical' %}
+            <div class="form-group">
+                <label for="proposed_date">Proposed Borrow Date</label>
+                <input type="date" id="proposed_date" name="proposed_date" min="{{ today }}" required />
+                <span class="field-hint">Choose when you'd like to borrow this book</span>
+            </div>
+
+            <div class="form-group">
+                <label for="proposed_time">Preferred Time</label>
+                <input type="time" id="proposed_time" name="proposed_time" value="10:00" required />
+            </div>
+
+            <div class="form-group">
+                <label for="borrow_location">Pickup / Delivery Location</label>
+                <input type="text" id="borrow_location" name="location" placeholder="e.g. Packages Mall, Lahore"
+                    required />
+            </div>
+            {% else %}
+            <div class="info-box" style="margin-bottom:1rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                    <polyline points="13 2 13 9 20 9" />
+                </svg>
+                Digital books are available for download once the owner approves your request.
+            </div>
+            {% endif %}
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="closeBorrowModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Send Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('proposed_date');
+    if (dateInput) dateInput.min = today;
+
+    function openBorrowModal() {
+        const m = document.getElementById('borrowModal');
+        if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    }
+    function closeBorrowModal(e) {
+        if (e && e.target !== document.getElementById('borrowModal')) return;
+        const m = document.getElementById('borrowModal');
+        if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+    }
+</script>
+{% endblock %}

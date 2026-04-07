@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Add a Book{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Add a Book</h1>
+        <p>Share a book with the BookShare community</p>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('books.add_book') }}" enctype="multipart/form-data" novalidate>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="title">Book Title <span class="required">*</span></label>
+                    <input type="text" id="title" name="title" value="{{ form_data.get('title', '') }}"
+                        placeholder="e.g. Atomic Habits" class="{{ 'input-error' if errors.get('title') }}" required />
+                    {% if errors.get('title') %}<span class="field-error">{{ errors.title }}</span>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="author">Author <span class="required">*</span></label>
+                    <input type="text" id="author" name="author" value="{{ form_data.get('author', '') }}"
+                        placeholder="e.g. James Clear" class="{{ 'input-error' if errors.get('author') }}" required />
+                    {% if errors.get('author') %}<span class="field-error">{{ errors.author }}</span>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category <span class="required">*</span></label>
+                    <select id="category" name="category" class="{{ 'input-error' if errors.get('category') }}"
+                        required>
+                        <option value="">Select a category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {{ 'selected' if form_data.get('category')==cat }}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.get('category') %}<span class="field-error">{{ errors.category }}</span>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Book Type <span class="required">*</span></label>
+                    <div class="type-toggle">
+                        <label
+                            class="type-option {{ 'type-selected' if form_data.get('book_type') == 'physical' or not form_data.get('book_type') }}">
+                            <input type="radio" name="book_type" value="physical" {{ 'checked' if
+                                form_data.get('book_type', 'physical' )=='physical' }}
+                                onchange="toggleBookType('physical')" />
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            </svg>
+                            Physical
+                        </label>
+                        <label class="type-option {{ 'type-selected' if form_data.get('book_type') == 'digital' }}">
+                            <input type="radio" name="book_type" value="digital" {{ 'checked' if
+                                form_data.get('book_type')=='digital' }} onchange="toggleBookType('digital')" />
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                                <polyline points="13 2 13 9 20 9" />
+                            </svg>
+                            Digital
+                        </label>
+                    </div>
+                    {% if errors.get('book_type') %}<span class="field-error">{{ errors.book_type }}</span>{% endif %}
+                </div>
+            </div>
+
+            <!-- Physical fields -->
+            <div id="physical-fields" class="conditional-fields">
+                <div class="form-group">
+                    <label for="location">Pickup Location <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <input type="text" id="location" name="location" value="{{ form_data.get('location', '') }}"
+                            placeholder="e.g. Gulberg, Lahore" class="{{ 'input-error' if errors.get('location') }}" />
+                    </div>
+                    {% if errors.get('location') %}<span class="field-error">{{ errors.location }}</span>{% endif %}
+                </div>
+            </div>
+
+            <!-- Digital fields -->
+            <div id="digital-fields" class="conditional-fields" style="display:none;">
+                <div class="form-group">
+                    <label>Upload PDF File</label>
+                    <div class="file-upload-area" id="fileDropArea">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <p>Drag &amp; drop your PDF here, or <label for="file_upload"
+                                class="file-browse-link">browse</label></p>
+                        <p class="file-hint">PDF only · Max 10 MB</p>
+                        <input type="file" id="file_upload" name="file_upload" accept=".pdf" style="display:none"
+                            onchange="showFileName(this)" />
+                        <div id="file-chosen" class="file-chosen" style="display:none;"></div>
+                    </div>
+                    {% if errors.get('file_upload') %}<span class="field-error">{{ errors.file_upload }}</span>{% endif
+                    %}
+                </div>
+
+                <div class="divider-or"><span>or provide an external link</span></div>
+
+                <div class="form-group">
+                    <label for="file_link">External Download Link</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                        <input type="url" id="file_link" name="file_link" value="{{ form_data.get('file_link', '') }}"
+                            placeholder="https://drive.google.com/..."
+                            class="{{ 'input-error' if errors.get('file_link') }}" />
+                    </div>
+                    {% if errors.get('file_link') %}<span class="field-error">{{ errors.file_link }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top:1.5rem;">
+                <a href="{{ url_for('books.my_books') }}" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    List Book
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleBookType(type) {
+        document.getElementById('physical-fields').style.display = type === 'physical' ? 'block' : 'none';
+        document.getElementById('digital-fields').style.display = type === 'digital' ? 'block' : 'none';
+        document.querySelectorAll('.type-option').forEach(el => el.classList.remove('type-selected'));
+        document.querySelector(`.type-option input[value="${type}"]`).parentElement.classList.add('type-selected');
+    }
+
+    function showFileName(input) {
+        const chosen = document.getElementById('file-chosen');
+        if (input.files && input.files[0]) {
+            chosen.textContent = '✓ ' + input.files[0].name;
+            chosen.style.display = 'block';
+        }
+    }
+
+    // Drag and drop
+    const dropArea = document.getElementById('fileDropArea');
+    if (dropArea) {
+        ['dragenter', 'dragover'].forEach(e => dropArea.addEventListener(e, ev => {
+            ev.preventDefault(); dropArea.classList.add('drag-over');
+        }));
+        ['dragleave', 'drop'].forEach(e => dropArea.addEventListener(e, ev => {
+            ev.preventDefault(); dropArea.classList.remove('drag-over');
+        }));
+        dropArea.addEventListener('drop', ev => {
+            const files = ev.dataTransfer.files;
+            if (files[0]) {
+                document.getElementById('file_upload').files = files;
+                showFileName(document.getElementById('file_upload'));
+            }
+        });
+    }
+
+    // Init correct state on page load
+    const checkedType = document.querySelector('input[name="book_type"]:checked');
+    if (checkedType) toggleBookType(checkedType.value);
+</script>
+{% endblock %}

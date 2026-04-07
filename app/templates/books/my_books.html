@@ -1,8 +1,78 @@
 {% extends "base.html" %}
 {% block title %}My Books{% endblock %}
+
 {% block content %}
 <div class="page-container">
-    <h1>My Books</h1>
-    <p style="color: var(--text-muted); margin-top: 0.5rem;">Coming in Phase 3...</p>
+    <div class="browse-header">
+        <div>
+            <h1>My Books</h1>
+            <p>Books you have shared with the community</p>
+        </div>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Book
+        </a>
+    </div>
+
+    {% if books %}
+    <div class="book-grid">
+        {% for book in books %}
+        <div class="book-card book-card-manage">
+            <a href="{{ url_for('books.detail', book_id=book.id) }}" class="book-cover-link">
+                <div class="book-cover" style="background: {{ loop_color(loop.index0) }}">
+                    <div class="book-cover-title">{{ book.title }}</div>
+                    <div class="book-cover-author">{{ book.author }}</div>
+                </div>
+            </a>
+            <div class="book-card-body">
+                <div class="book-badges">
+                    <span class="badge badge-{{ book.book_type }}">{{ book.book_type | capitalize }}</span>
+                    <span class="badge badge-{{ book.status }}">{{ book.status | capitalize }}</span>
+                </div>
+                <h3 class="book-title">
+                    <a href="{{ url_for('books.detail', book_id=book.id) }}">{{ book.title }}</a>
+                </h3>
+                <p class="book-author">{{ book.author }}</p>
+                <p class="book-category">{{ book.category }}</p>
+
+                {% set pending_count = book.borrow_requests | selectattr('status', 'equalto', 'pending') | list | length
+                %}
+                {% if pending_count > 0 %}
+                <div class="pending-alert">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {{ pending_count }} pending request{{ 's' if pending_count > 1 }}
+                </div>
+                {% endif %}
+
+                <div class="book-card-actions">
+                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-ghost btn-sm">Edit</a>
+                    <form method="POST" action="{{ url_for('books.delete_book', book_id=book.id) }}"
+                        onsubmit="return confirm('Delete \'{{ book.title }}\'?')" style="display:inline">
+                        <button type="submit" class="btn btn-sm"
+                            style="color:var(--danger);border-color:var(--border);">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        <h3>No books yet</h3>
+        <p>You haven't shared any books. Add your first one!</p>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-primary" style="margin-top:1rem;">Add a Book</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
