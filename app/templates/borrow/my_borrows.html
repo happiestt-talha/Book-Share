@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}My Borrowed Books{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>My Borrowed Books</h1>
+        <p>Books you are currently borrowing</p>
+    </div>
+
+    {% if borrow_data %}
+    <div class="borrow-list">
+        {% for item in borrow_data %}
+        {% set req = item.req %}
+        {% set days_left = item.days_left %}
+        <div class="borrow-card {{ 'borrow-card-urgent' if days_left is not none and days_left <= 1 }}">
+            <div class="borrow-cover" style="background: {{ loop_color(req.book.id % 12) }}">
+                <span>{{ req.book.title[:2] }}</span>
+            </div>
+
+            <div class="borrow-info">
+                <div class="borrow-top">
+                    <div>
+                        <h3>{{ req.book.title }}</h3>
+                        <p class="book-author">by {{ req.book.author }}</p>
+                    </div>
+                    <span class="badge badge-{{ req.book.book_type }}">{{ req.book.book_type | capitalize }}</span>
+                </div>
+
+                <div class="borrow-meta">
+                    <div class="borrow-meta-item">
+                        <span class="meta-label">Owner</span>
+                        <span class="meta-value">{{ req.book.owner.name }}</span>
+                    </div>
+                    <div class="borrow-meta-item">
+                        <span class="meta-label">Accepted on</span>
+                        <span class="meta-value">{{ req.accepted_at.strftime('%d %b %Y') if req.accepted_at }}</span>
+                    </div>
+                    {% if req.book.book_type == 'physical' and req.proposed_date %}
+                    <div class="borrow-meta-item">
+                        <span class="meta-label">Pickup</span>
+                        <span class="meta-value">
+                            {{ req.proposed_date.strftime('%d %b %Y') }}
+                            {% if req.proposed_time %}at {{ req.proposed_time.strftime('%I:%M %p') }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="borrow-meta-item">
+                        <span class="meta-label">Location</span>
+                        <span class="meta-value">{{ req.location or '—' }}</span>
+                    </div>
+                    {% endif %}
+                    {% if req.book.book_type == 'digital' and item.deadline %}
+                    <div class="borrow-meta-item">
+                        <span class="meta-label">Auto-return on</span>
+                        <span class="meta-value">{{ item.deadline.strftime('%d %b %Y') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if req.book.book_type == 'digital' and days_left is not none %}
+                {% if days_left <= 1 %} <div class="deadline-alert deadline-urgent">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {% if days_left <= 0 %} Auto-return overdue — processing soon {% else %} Last day! Auto-returns
+                        tomorrow {% endif %} </div>
+                        {% elif days_left <= 3 %} <div class="deadline-alert deadline-warning">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            {{ days_left }} day{{ 's' if days_left != 1 }} until auto-return
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="borrow-actions">
+            {% if req.book.book_type == 'digital' %}
+            {% if req.book.file_link %}
+            {% if req.book.file_link.startswith('http') %}
+            <a href="{{ req.book.file_link }}" target="_blank" class="btn btn-outline-green btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download
+            </a>
+            {% else %}
+            <a href="{{ url_for('books.serve_file', filename=req.book.file_link) }}"
+                class="btn btn-outline-green btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download PDF
+            </a>
+            {% endif %}
+            {% endif %}
+            <form method="POST" action="{{ url_for('borrow.mark_returned', req_id=req.id) }}"
+                onsubmit="return confirm('Mark this digital book as returned? You will lose download access.')">
+                <button type="submit" class="btn btn-ghost btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 14 4 9 9 4" />
+                        <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                    </svg>
+                    Mark Returned
+                </button>
+            </form>
+            {% else %}
+            <div class="physical-return-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                Return in person — owner will confirm
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+    <h3>No active borrows</h3>
+    <p>You haven't borrowed any books yet. <a href="{{ url_for('books.browse') }}">Browse books</a> to find something to
+        read.</p>
+</div>
+{% endif %}
+</div>
+{% endblock %}

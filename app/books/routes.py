@@ -225,6 +225,8 @@ def my_books():
 @books_bp.route('/dashboard')
 @login_required
 def dashboard():
+    from app.borrow.routes import check_auto_returns
+    check_auto_returns()
     return render_template('books/dashboard.html')
 
 
