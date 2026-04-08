@@ -1,8 +1,493 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+
 {% block content %}
 <div class="page-container">
-    <h1>Dashboard</h1>
-    <p style="color: var(--text-muted); margin-top: 0.5rem;">Coming in Phase 5...</p>
+
+    <!-- WELCOME HEADER -->
+    <div class="dash-welcome">
+        <div class="dash-welcome-left">
+            <div class="dash-avatar">{{ current_user.name[0].upper() }}</div>
+            <div>
+                <h1>Welcome back, {{ current_user.name.split()[0] }}!</h1>
+                <p>Here's what's happening with your books</p>
+            </div>
+        </div>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Book
+        </a>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ my_books_count }}</span>
+                <span class="stat-label">Books Shared</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ active_borrows }}</span>
+                <span class="stat-label">Active Borrows</span>
+            </div>
+        </div>
+
+        <div class="stat-card {{ 'stat-card-alert' if pending_incoming > 0 }}">
+            <div class="stat-icon stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ pending_incoming }}</span>
+                <span class="stat-label">Pending Requests</span>
+            </div>
+            {% if pending_incoming > 0 %}
+            <span class="stat-dot"></span>
+            {% endif %}
+        </div>
+
+        <div class="stat-card {{ 'stat-card-alert' if unread_notifs > 0 }}">
+            <div class="stat-icon stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ unread_notifs }}</span>
+                <span class="stat-label">Unread Notifications</span>
+            </div>
+            {% if unread_notifs > 0 %}
+            <span class="stat-dot"></span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="dash-tabs">
+        <button class="dash-tab active" onclick="switchTab('my-books', this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            My Books
+            {% if my_books_count > 0 %}
+            <span class="tab-count">{{ my_books_count }}</span>
+            {% endif %}
+        </button>
+
+        <button class="dash-tab" onclick="switchTab('pending', this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Requests
+            {% if pending_incoming > 0 %}
+            <span class="tab-count tab-count-alert">{{ pending_incoming }}</span>
+            {% endif %}
+        </button>
+
+        <button class="dash-tab" onclick="switchTab('borrows', this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Borrowed Books
+            {% if active_borrows > 0 %}
+            <span class="tab-count">{{ active_borrows }}</span>
+            {% endif %}
+        </button>
+
+        <button class="dash-tab" onclick="switchTab('notifications', this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            Notifications
+            {% if unread_notifs > 0 %}
+            <span class="tab-count tab-count-alert">{{ unread_notifs }}</span>
+            {% endif %}
+        </button>
+    </div>
+
+    <!-- ── TAB: MY BOOKS ── -->
+    <div class="tab-panel active" id="tab-my-books">
+        {% if my_books %}
+        <div class="book-grid">
+            {% for book in my_books %}
+            <div class="book-card book-card-manage">
+                <a href="{{ url_for('books.detail', book_id=book.id) }}" class="book-cover-link">
+                    <div class="book-cover" style="background: {{ loop_color(loop.index0) }}">
+                        <div class="book-cover-title">{{ book.title }}</div>
+                        <div class="book-cover-author">{{ book.author }}</div>
+                    </div>
+                </a>
+                <div class="book-card-body">
+                    <div class="book-badges">
+                        <span class="badge badge-{{ book.book_type }}">{{ book.book_type | capitalize }}</span>
+                        <span class="badge badge-{{ book.status }}">{{ book.status | capitalize }}</span>
+                    </div>
+                    <h3 class="book-title">
+                        <a href="{{ url_for('books.detail', book_id=book.id) }}">{{ book.title }}</a>
+                    </h3>
+                    <p class="book-author">{{ book.author }}</p>
+                    {% set pcount = book.borrow_requests | selectattr('status','equalto','pending') | list | length %}
+                    {% if pcount > 0 %}
+                    <div class="pending-alert">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        {{ pcount }} pending request{{ 's' if pcount > 1 }}
+                    </div>
+                    {% endif %}
+                    <div class="book-card-actions">
+                        <a href="{{ url_for('books.edit_book', book_id=book.id) }}"
+                            class="btn btn-ghost btn-sm">Edit</a>
+                        <form method="POST" action="{{ url_for('books.delete_book', book_id=book.id) }}"
+                            onsubmit="return confirm('Delete \'{{ book.title }}\'?')" style="display:inline">
+                            <button type="submit" class="btn btn-sm"
+                                style="color:var(--danger);border-color:var(--border);">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if my_books_count > 6 %}
+        <div style="text-align:center; margin-top:1.5rem;">
+            <a href="{{ url_for('books.my_books') }}" class="btn btn-ghost">
+                View all {{ my_books_count }} books →
+            </a>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            <h3>No books shared yet</h3>
+            <p>Start by adding your first book to share with the community.</p>
+            <a href="{{ url_for('books.add_book') }}" class="btn btn-primary" style="margin-top:1rem;">Add a Book</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ── TAB: PENDING REQUESTS ── -->
+    <div class="tab-panel" id="tab-pending">
+        {% if pending_requests %}
+        <div class="request-list">
+            {% for req in pending_requests %}
+            <div class="request-card">
+                <div class="request-book-cover" style="background: {{ loop_color(req.book.id % 12) }}">
+                    <span>{{ req.book.title[:2] }}</span>
+                </div>
+                <div class="request-info">
+                    <div class="request-top">
+                        <div>
+                            <h3 class="request-book-title">{{ req.book.title }}</h3>
+                            <p class="request-book-author">by {{ req.book.author }}</p>
+                        </div>
+                        <span class="badge badge-{{ req.book.book_type }}">{{ req.book.book_type | capitalize }}</span>
+                    </div>
+                    <div class="request-requester">
+                        <div class="requester-avatar">{{ req.borrower.name[0].upper() }}</div>
+                        <div>
+                            <span class="requester-name">{{ req.borrower.name }}</span>
+                            <span class="request-time">{{ req.created_at.strftime('%d %b %Y at %I:%M %p') }}</span>
+                        </div>
+                    </div>
+                    {% if req.book.book_type == 'physical' and req.proposed_date %}
+                    <div class="request-schedule">
+                        <div class="schedule-item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {{ req.proposed_date.strftime('%d %b %Y') }}
+                        </div>
+                        {% if req.proposed_time %}
+                        <div class="schedule-item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {{ req.proposed_time.strftime('%I:%M %p') }}
+                        </div>
+                        {% endif %}
+                        {% if req.location %}
+                        <div class="schedule-item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            {{ req.location }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="request-digital-note">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                            <polyline points="13 2 13 9 20 9" />
+                        </svg>
+                        Digital book — no scheduling needed
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="request-actions">
+                    <form method="POST" action="{{ url_for('borrow.accept_request', req_id=req.id) }}">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Accept
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('borrow.reject_request', req_id=req.id) }}"
+                        onsubmit="return confirm('Reject this request?')">
+                        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                            Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <h3>No pending requests</h3>
+            <p>When someone requests to borrow your books, they'll appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ── TAB: BORROWED BOOKS ── -->
+    <div class="tab-panel" id="tab-borrows">
+        {% if borrow_data %}
+        <div class="borrow-list">
+            {% for item in borrow_data %}
+            {% set req = item.req %}
+            {% set days_left = item.days_left %}
+            <div class="borrow-card {{ 'borrow-card-urgent' if days_left is not none and days_left <= 1 }}">
+                <div class="borrow-cover" style="background: {{ loop_color(req.book.id % 12) }}">
+                    <span>{{ req.book.title[:2] }}</span>
+                </div>
+                <div class="borrow-info">
+                    <div class="borrow-top">
+                        <div>
+                            <h3>{{ req.book.title }}</h3>
+                            <p class="book-author">by {{ req.book.author }}</p>
+                        </div>
+                        <span class="badge badge-{{ req.book.book_type }}">{{ req.book.book_type | capitalize }}</span>
+                    </div>
+                    <div class="borrow-meta">
+                        <div class="borrow-meta-item">
+                            <span class="meta-label">Owner</span>
+                            <span class="meta-value">{{ req.book.owner.name }}</span>
+                        </div>
+                        <div class="borrow-meta-item">
+                            <span class="meta-label">Accepted</span>
+                            <span class="meta-value">{{ req.accepted_at.strftime('%d %b %Y') if req.accepted_at
+                                }}</span>
+                        </div>
+                        {% if req.book.book_type == 'physical' and req.proposed_date %}
+                        <div class="borrow-meta-item">
+                            <span class="meta-label">Pickup date</span>
+                            <span class="meta-value">{{ req.proposed_date.strftime('%d %b %Y') }}</span>
+                        </div>
+                        <div class="borrow-meta-item">
+                            <span class="meta-label">Location</span>
+                            <span class="meta-value">{{ req.location or '—' }}</span>
+                        </div>
+                        {% endif %}
+                        {% if req.book.book_type == 'digital' and item.deadline %}
+                        <div class="borrow-meta-item">
+                            <span class="meta-label">Auto-return</span>
+                            <span class="meta-value">{{ item.deadline.strftime('%d %b %Y') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if req.book.book_type == 'digital' and days_left is not none %}
+                    {% if days_left <= 1 %} <div class="deadline-alert deadline-urgent">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        {% if days_left <= 0 %}Auto-return overdue{% else %}Last day — auto-returns tomorrow{% endif %}
+                            </div>
+                            {% elif days_left <= 3 %} <div class="deadline-alert deadline-warning">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                {{ days_left }} day{{ 's' if days_left != 1 }} until auto-return
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div class="borrow-actions">
+                {% if req.book.book_type == 'digital' %}
+                {% if req.book.file_link %}
+                {% if req.book.file_link.startswith('http') %}
+                <a href="{{ req.book.file_link }}" target="_blank" class="btn btn-outline-green btn-sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Download
+                </a>
+                {% else %}
+                <a href="{{ url_for('books.serve_file', filename=req.book.file_link) }}"
+                    class="btn btn-outline-green btn-sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Download PDF
+                </a>
+                {% endif %}
+                {% endif %}
+                <form method="POST" action="{{ url_for('borrow.mark_returned', req_id=req.id) }}"
+                    onsubmit="return confirm('Mark as returned? You will lose download access.')">
+                    <button type="submit" class="btn btn-ghost btn-sm">Mark Returned</button>
+                </form>
+                {% else %}
+                <div class="physical-return-note">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    Return in person — owner will confirm
+                </div>
+                <form method="POST" action="{{ url_for('borrow.mark_returned', req_id=req.id) }}"
+                    onsubmit="return confirm('Confirm you have received this book back?')">
+                    <button type="submit" class="btn btn-outline-green btn-sm">Mark Returned</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        <h3>No active borrows</h3>
+        <p><a href="{{ url_for('books.browse') }}">Browse books</a> and request one to borrow.</p>
+    </div>
+    {% endif %}
 </div>
+
+<!-- ── TAB: NOTIFICATIONS ── -->
+<div class="tab-panel" id="tab-notifications">
+    {% if recent_notifs %}
+    <div class="notif-list">
+        {% for notif in recent_notifs %}
+        <div class="notif-item {{ 'notif-unread' if not notif.is_read }}">
+            <div class="notif-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+            </div>
+            <div class="notif-body">
+                <p class="notif-message">{{ notif.message }}</p>
+                <span class="notif-time">{{ notif.created_at.strftime('%d %b %Y at %I:%M %p') }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:1.25rem;">
+        <a href="{{ url_for('borrow.notifications') }}" class="btn btn-ghost">
+            View all notifications →
+        </a>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <h3>No notifications yet</h3>
+        <p>Activity on your books and borrow requests will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Auto-open tab from URL hash
+    document.addEventListener('DOMContentLoaded', function () {
+        const hash = window.location.hash.replace('#', '');
+        const valid = ['my-books', 'pending', 'borrows', 'notifications'];
+        if (valid.includes(hash)) {
+            const btn = document.querySelector(`.dash-tab[onclick*="${hash}"]`);
+            if (btn) switchTab(hash, btn);
+        }
+    });
+</script>
 {% endblock %}

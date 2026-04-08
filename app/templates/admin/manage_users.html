@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Manage Users — Admin{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="admin-header">
+        <div>
+            <h1>Manage Users</h1>
+            <p>{{ pagination.total }} user{{ 's' if pagination.total != 1 }} registered</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost btn-sm">← Admin Home</a>
+    </div>
+
+    <!-- FILTERS -->
+    <form method="GET" class="admin-filter-bar">
+        <div class="input-wrap" style="flex:1; min-width:200px;">
+            <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text" name="search" placeholder="Search name or email…" value="{{ search }}" />
+        </div>
+        <select name="role" onchange="this.form.submit()">
+            <option value="">All Roles</option>
+            <option value="member" {{ 'selected' if selected_role=='member' }}>Members</option>
+            <option value="admin" {{ 'selected' if selected_role=='admin' }}>Admins</option>
+        </select>
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="active" {{ 'selected' if selected_status=='active' }}>Active</option>
+            <option value="blocked" {{ 'selected' if selected_status=='blocked' }}>Blocked</option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-ghost btn-sm">Reset</a>
+    </form>
+
+    <!-- TABLE -->
+    {% if users %}
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Books</th>
+                    <th>Borrows</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="{{ 'row-blocked' if user.is_blocked }}">
+                    <td>
+                        <div class="table-user-cell">
+                            <div class="table-avatar" style="{{ 'background:#e53e3e;' if user.is_blocked else '' }}">
+                                {{ user.name[0].upper() }}
+                            </div>
+                            <div>
+                                <div class="table-book-title">{{ user.name }}</div>
+                                <div class="table-book-sub">{{ user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ 'admin' if user.is_admin() else 'member' }}">
+                            {{ user.role | capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ user.book_count }}</td>
+                    <td>{{ user.borrow_count }}</td>
+                    <td>
+                        {% if user.is_blocked %}
+                        <span class="badge" style="background:#fed7d7;color:#9b2c2c;">Blocked</span>
+                        {% else %}
+                        <span class="badge badge-available">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="table-date">{{ user.created_at.strftime('%d %b %Y') }}</td>
+                    <td>
+                        <div class="table-actions">
+                            {% if user.id != current_user.id and not user.is_admin() %}
+                            <form method="POST" action="{{ url_for('admin.toggle_block', user_id=user.id) }}"
+                                onsubmit="return confirm('{{ 'Unblock' if user.is_blocked else 'Block' }} {{ user.name }}?')">
+                                <button type="submit"
+                                    class="btn btn-sm {{ 'btn-outline-green' if user.is_blocked else 'admin-block-btn' }}"
+                                    title="{{ 'Unblock' if user.is_blocked else 'Block' }}">
+                                    {% if user.is_blocked %}
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                        <polyline points="22 4 12 14.01 9 11.01" />
+                                    </svg>
+                                    Unblock
+                                    {% else %}
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                    </svg>
+                                    Block
+                                    {% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.promote_user', user_id=user.id) }}"
+                                onsubmit="return confirm('Promote {{ user.name }} to admin?')">
+                                <button type="submit" class="btn btn-ghost btn-sm" title="Promote to admin">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="17 11 12 6 7 11" />
+                                        <polyline points="17 18 12 13 7 18" />
+                                    </svg>
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="table-self-badge">
+                                {{ 'You' if user.id == current_user.id else 'Admin' }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="pagination" style="margin-top:1.5rem;">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('admin.manage_users', page=pagination.prev_num, search=search, role=selected_role or '', status=selected_status or '') }}"
+            class="page-btn">&larr; Prev</a>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <a href="{{ url_for('admin.manage_users', page=p, search=search, role=selected_role or '', status=selected_status or '') }}"
+            class="page-btn {{ 'page-btn-active' if p == pagination.page }}">{{ p }}</a>
+        {% else %}
+        <span class="page-ellipsis">…</span>
+        {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for('admin.manage_users', page=pagination.next_num, search=search, role=selected_role or '', status=selected_status or '') }}"
+            class="page-btn">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+        </svg>
+        <h3>No users found</h3>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

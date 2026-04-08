@@ -24,14 +24,14 @@ def save_uploaded_file(file):
     return unique_name
 
 
-# ── HOME / BROWSE ────────────────────────────────────────────────
+# ── BROWSE ───────────────────────────────────────────────────────
 @books_bp.route('/')
 def browse():
-    search   = request.args.get('search', '').strip()
-    category = request.args.get('category', '')
-    book_type= request.args.get('type', '')
-    avail    = request.args.get('availability', '')
-    page     = request.args.get('page', 1, type=int)
+    search    = request.args.get('search', '').strip()
+    category  = request.args.get('category', '')
+    book_type = request.args.get('type', '')
+    avail     = request.args.get('availability', '')
+    page      = request.args.get('page', 1, type=int)
 
     query = Book.query.filter_by(is_deleted=False)
 
@@ -49,7 +49,8 @@ def browse():
     if avail:
         query = query.filter_by(status=avail)
 
-    pagination = query.order_by(Book.created_at.desc()).paginate(page=page, per_page=12, error_out=False)
+    pagination = query.order_by(Book.created_at.desc()).paginate(
+        page=page, per_page=12, error_out=False)
     books = pagination.items
 
     return render_template('books/browse.html',
@@ -95,11 +96,14 @@ def add_book():
         form_data = {'title': title, 'author': author, 'category': category,
                      'book_type': book_type, 'location': location, 'file_link': file_link}
 
-        if not title:       errors['title']    = 'Title is required.'
-        if not author:      errors['author']   = 'Author is required.'
-        if category not in CATEGORIES: errors['category'] = 'Select a valid category.'
-        if book_type not in BOOK_TYPES: errors['book_type'] = 'Select Physical or Digital.'
-
+        if not title:
+            errors['title']    = 'Title is required.'
+        if not author:
+            errors['author']   = 'Author is required.'
+        if category not in CATEGORIES:
+            errors['category'] = 'Select a valid category.'
+        if book_type not in BOOK_TYPES:
+            errors['book_type'] = 'Select Physical or Digital.'
         if book_type == 'physical' and not location:
             errors['location'] = 'Location is required for physical books.'
 
@@ -146,16 +150,18 @@ def edit_book(book_id):
     errors = {}
 
     if request.method == 'POST':
-        title    = request.form.get('title', '').strip()
-        author   = request.form.get('author', '').strip()
-        category = request.form.get('category', '').strip()
-        location = request.form.get('location', '').strip()
-        file_link= request.form.get('file_link', '').strip()
+        title     = request.form.get('title', '').strip()
+        author    = request.form.get('author', '').strip()
+        category  = request.form.get('category', '').strip()
+        location  = request.form.get('location', '').strip()
+        file_link = request.form.get('file_link', '').strip()
 
-        if not title:   errors['title']  = 'Title is required.'
-        if not author:  errors['author'] = 'Author is required.'
-        if category not in CATEGORIES: errors['category'] = 'Select a valid category.'
-
+        if not title:
+            errors['title']  = 'Title is required.'
+        if not author:
+            errors['author'] = 'Author is required.'
+        if category not in CATEGORIES:
+            errors['category'] = 'Select a valid category.'
         if book.book_type == 'physical' and not location:
             errors['location'] = 'Location is required for physical books.'
 
@@ -165,7 +171,6 @@ def edit_book(book_id):
                 if not allowed_file(uploaded.filename):
                     errors['file_upload'] = 'Only PDF files are allowed.'
                 else:
-                    # delete old file if it was an upload (not an external link)
                     if book.file_link and not book.file_link.startswith('http'):
                         old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.file_link)
                         if os.path.exists(old_path):
@@ -216,25 +221,80 @@ def delete_book(book_id):
 @books_bp.route('/my')
 @login_required
 def my_books():
-    books = Book.query.filter_by(owner_id=current_user.id, is_deleted=False)\
+    books = Book.query.filter_by(owner_id=current_user.id, is_deleted=False) \
                       .order_by(Book.created_at.desc()).all()
     return render_template('books/my_books.html', books=books)
 
 
-# ── DASHBOARD (placeholder, built fully in Phase 5) ──────────────
+# ── DASHBOARD ────────────────────────────────────────────────────
 @books_bp.route('/dashboard')
 @login_required
 def dashboard():
     from app.borrow.routes import check_auto_returns
+    from datetime import timedelta
     check_auto_returns()
-    return render_template('books/dashboard.html')
+
+    # Stats
+    my_books_count = Book.query.filter_by(
+        owner_id=current_user.id, is_deleted=False).count()
+
+    active_borrows = BorrowRequest.query.filter_by(
+        borrower_id=current_user.id, status='accepted').count()
+
+    pending_incoming = BorrowRequest.query.join(Book).filter(
+        Book.owner_id == current_user.id,
+        BorrowRequest.status == 'pending').count()
+
+    unread_notifs = Notification.query.filter_by(
+        user_id=current_user.id, is_read=False).count()
+
+    # My shared books (latest 6)
+    my_books = Book.query.filter_by(
+        owner_id=current_user.id, is_deleted=False) \
+        .order_by(Book.created_at.desc()).limit(6).all()
+
+    # Pending requests on my books
+    pending_requests = BorrowRequest.query.join(Book).filter(
+        Book.owner_id == current_user.id,
+        BorrowRequest.status == 'pending'
+    ).order_by(BorrowRequest.created_at.desc()).all()
+
+    # My active borrows
+    from app.models import BorrowRequest as BR
+    active_borrow_list = BorrowRequest.query.filter_by(
+        borrower_id=current_user.id, status='accepted'
+    ).order_by(BorrowRequest.accepted_at.desc()).all()
+
+    borrow_data = []
+    for req in active_borrow_list:
+        deadline  = None
+        days_left = None
+        if req.book.book_type == 'digital' and req.accepted_at:
+            from datetime import datetime
+            deadline  = req.accepted_at + timedelta(days=7)
+            days_left = (deadline - datetime.utcnow()).days
+        borrow_data.append({'req': req, 'deadline': deadline, 'days_left': days_left})
+
+    # Recent notifications (5)
+    recent_notifs = Notification.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Notification.created_at.desc()).limit(5).all()
+
+    return render_template('books/dashboard.html',
+                           my_books_count=my_books_count,
+                           active_borrows=active_borrows,
+                           pending_incoming=pending_incoming,
+                           unread_notifs=unread_notifs,
+                           my_books=my_books,
+                           pending_requests=pending_requests,
+                           borrow_data=borrow_data,
+                           recent_notifs=recent_notifs)
 
 
-# ── SERVE UPLOADED FILE (only for accepted borrower / owner) ─────
+# ── SERVE FILE ───────────────────────────────────────────────────
 @books_bp.route('/file/<path:filename>')
 @login_required
 def serve_file(filename):
-    # security: only owner or accepted borrower can download
     book = Book.query.filter_by(file_link=filename, is_deleted=False).first_or_404()
     is_owner    = book.owner_id == current_user.id
     is_borrower = BorrowRequest.query.filter_by(
@@ -244,4 +304,5 @@ def serve_file(filename):
     ).first() is not None
     if not (is_owner or is_borrower or current_user.is_admin()):
         abort(403)
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'], filename, as_attachment=True)

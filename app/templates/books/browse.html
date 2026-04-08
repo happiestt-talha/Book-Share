@@ -125,7 +125,7 @@
             {% if pagination.pages > 1 %}
             <div class="pagination">
                 {% if pagination.has_prev %}
-                <a href="{{ url_for('books.browse', page=pagination.prev_num, search=search, category=selected_category, type=selected_type, availability=selected_avail) }}"
+                <a href="{{ url_for('books.browse', page=pagination.prev_num, search=search, category=selected_category or '', type=selected_type or '', availability=selected_avail or '') }}"
                     class="page-btn">
                     &larr; Prev
                 </a>
@@ -133,7 +133,7 @@
 
                 {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if p %}
-                <a href="{{ url_for('books.browse', page=p, search=search, category=selected_category, type=selected_type, availability=selected_avail) }}"
+                <a href="{{ url_for('books.browse', page=p, search=search, category=selected_category or '', type=selected_type or '', availability=selected_avail or '') }}"
                     class="page-btn {{ 'page-btn-active' if p == pagination.page }}">
                     {{ p }}
                 </a>
@@ -143,7 +143,7 @@
                 {% endfor %}
 
                 {% if pagination.has_next %}
-                <a href="{{ url_for('books.browse', page=pagination.next_num, search=search, category=selected_category, type=selected_type, availability=selected_avail) }}"
+                <a href="{{ url_for('books.browse', page=pagination.next_num, search=search, category=selected_category or '', type=selected_type or '', availability=selected_avail or '') }}"
                     class="page-btn">
                     Next &rarr;
                 </a>

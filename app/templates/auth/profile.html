@@ -5,60 +5,198 @@
 <div class="page-container">
     <div class="page-header">
         <h1>My Profile</h1>
-        <p>Update your personal information</p>
+        <p>Manage your personal information</p>
     </div>
 
-    <div class="profile-card">
-        <div class="profile-avatar-section">
+    <div class="profile-layout">
+
+        <!-- LEFT: Identity card -->
+        <div class="profile-id-card">
             <div class="profile-avatar-large">{{ current_user.name[0].upper() }}</div>
-            <div>
-                <h2>{{ current_user.name }}</h2>
-                <span class="badge badge-{{ 'admin' if current_user.is_admin() else 'member' }}">
-                    {{ current_user.role | capitalize }}
-                </span>
-                <p class="profile-joined">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+            <h2 class="profile-name">{{ current_user.name }}</h2>
+            <span class="badge badge-{{ 'admin' if current_user.is_admin() else 'member' }}">
+                {{ current_user.role | capitalize }}
+            </span>
+            <p class="profile-joined">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <span class="profile-stat-num">
+                        {{ current_user.books | selectattr('is_deleted', 'equalto', false) | list | length }}
+                    </span>
+                    <span class="profile-stat-label">Books Shared</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-num">
+                        {{ current_user.borrow_requests | selectattr('status', 'equalto', 'completed') | list | length
+                        }}
+                    </span>
+                    <span class="profile-stat-label">Books Borrowed</span>
+                </div>
+            </div>
+
+            {% if current_user.city %}
+            <div class="profile-city">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                {{ current_user.city }}
+            </div>
+            {% endif %}
+
+            <div style="margin-top:1.5rem;">
+                <a href="{{ url_for('books.dashboard') }}" class="btn btn-ghost btn-full">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    Go to Dashboard
+                </a>
             </div>
         </div>
 
-        <form method="POST" action="{{ url_for('auth.profile') }}" class="profile-form">
-            <div class="form-grid-2">
+        <!-- RIGHT: Edit form -->
+        <div class="profile-form-card">
+            <h2 style="margin-bottom:1.5rem; font-size:1.1rem;">Edit Information</h2>
+
+            <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+
                 <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" value="{{ current_user.name }}" required />
-                    {% if errors and errors.get('name') %}
+                    <label for="name">Full Name <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ current_user.name }}"
+                        class="{{ 'input-error' if errors.get('name') }}" required />
+                    {% if errors.get('name') %}
                     <span class="field-error">{{ errors.name }}</span>
                     {% endif %}
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" value="{{ current_user.email }}" disabled class="input-disabled" />
+                    <label>Email Address</label>
+                    <input type="email" value="{{ current_user.email }}" disabled class="input-disabled" />
                     <span class="field-hint">Email cannot be changed</span>
                 </div>
 
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span class="optional">(optional)</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.87a16 16 0 0 0 6 6l1.27-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z" />
+                            </svg>
+                            <input type="text" id="phone" name="phone" value="{{ current_user.phone or '' }}"
+                                placeholder="+92 300 1234567" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city">City <span class="optional">(optional)</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <input type="text" id="city" name="city" value="{{ current_user.city or '' }}"
+                                placeholder="Lahore, Pakistan" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+
+            <!-- Change Password section -->
+            <div class="profile-divider"></div>
+
+            <h2 style="margin-bottom:1.25rem; font-size:1.1rem;">Change Password</h2>
+            <form method="POST" action="{{ url_for('auth.change_password') }}" novalidate>
                 <div class="form-group">
-                    <label for="phone">Phone Number <span class="optional">(optional)</span></label>
-                    <input type="text" id="phone" name="phone"
-                        value="{{ current_user.phone if current_user.phone else '' }}" placeholder="+92 300 1234567" />
-                    {% if errors and errors.get('phone') %}
-                    <span class="field-error">{{ errors.phone }}</span>
+                    <label for="current_password">Current Password</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <input type="password" id="current_password" name="current_password"
+                            placeholder="Your current password"
+                            class="{{ 'input-error' if errors.get('current_password') }}" />
+                        <button type="button" class="toggle-pw" onclick="togglePassword('current_password', this)"
+                            tabindex="-1">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                    {% if errors.get('current_password') %}
+                    <span class="field-error">{{ errors.current_password }}</span>
                     {% endif %}
                 </div>
 
-                <div class="form-group">
-                    <label for="city">City <span class="optional">(optional)</span></label>
-                    <input type="text" id="city" name="city"
-                        value="{{ current_user.city if current_user.city else '' }}" placeholder="Lahore, Pakistan" />
-                    {% if errors and errors.get('city') %}
-                    <span class="field-error">{{ errors.city }}</span>
-                    {% endif %}
-                </div>
-            </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <input type="password" id="new_password" name="new_password" placeholder="Min. 8 characters"
+                                class="{{ 'input-error' if errors.get('new_password') }}" />
+                            <button type="button" class="toggle-pw" onclick="togglePassword('new_password', this)"
+                                tabindex="-1">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if errors.get('new_password') %}
+                        <span class="field-error">{{ errors.new_password }}</span>
+                        {% endif %}
+                    </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-            </div>
-        </form>
+                    <div class="form-group">
+                        <label for="confirm_new">Confirm New Password</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <input type="password" id="confirm_new" name="confirm_new" placeholder="Repeat new password"
+                                class="{{ 'input-error' if errors.get('confirm_new') }}" />
+                            <button type="button" class="toggle-pw" onclick="togglePassword('confirm_new', this)"
+                                tabindex="-1">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if errors.get('confirm_new') %}
+                        <span class="field-error">{{ errors.confirm_new }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-ghost">Update Password</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

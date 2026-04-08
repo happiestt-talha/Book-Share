@@ -90,17 +90,44 @@ def logout():
 def profile():
     errors = {}
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
+        name  = request.form.get('name',  '').strip()
+        phone = request.form.get('phone', '').strip()
+        city  = request.form.get('city',  '').strip()
+
         if not name or len(name) < 2:
             errors['name'] = 'Name must be at least 2 characters.'
-        else:
-            current_user.name = name
-            current_user.phone = request.form.get('phone', '')
-            current_user.city = request.form.get('city', '')
+
+        if not errors:
+            current_user.name  = name
+            current_user.phone = phone or None
+            current_user.city  = city  or None
             db.session.commit()
             flash('Profile updated successfully!', 'success')
-            flash(current_user.phone, 'success')
-            print("Current user data: ", current_user)
             return redirect(url_for('auth.profile'))
 
     return render_template('auth/profile.html', errors=errors)
+
+
+@auth_bp.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    errors = {}
+    current_pw  = request.form.get('current_password', '')
+    new_pw      = request.form.get('new_password', '')
+    confirm_new = request.form.get('confirm_new', '')
+
+    if not check_password_hash(current_user.password, current_pw):
+        errors['current_password'] = 'Current password is incorrect.'
+    if len(new_pw) < 8:
+        errors['new_password'] = 'New password must be at least 8 characters.'
+    if new_pw != confirm_new:
+        errors['confirm_new'] = 'Passwords do not match.'
+
+    if errors:
+        flash('Please fix the errors below.', 'danger')
+        return render_template('auth/profile.html', errors=errors)
+
+    current_user.password = generate_password_hash(new_pw)
+    db.session.commit()
+    flash('Password changed successfully!', 'success')
+    return redirect(url_for('auth.profile'))

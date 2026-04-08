@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}Reports — Admin{% endblock %}
+
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="admin-header">
+        <div>
+            <h1>Platform Reports</h1>
+            <p>Usage statistics and analytics</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost btn-sm">← Admin Home</a>
+    </div>
+
+    <!-- SUMMARY STATS -->
+    <div class="stat-grid" style="margin-bottom:2rem;">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ total_users }}</span>
+                <span class="stat-label">Total Users</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ total_books }}</span>
+                <span class="stat-label">Total Books</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ active_borrows }}</span>
+                <span class="stat-label">Active Borrows</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            </div>
+            <div class="stat-body">
+                <span class="stat-number">{{ completed }}</span>
+                <span class="stat-label">Completed Borrows</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="report-charts-grid">
+        <div class="report-chart-card">
+            <h2>New Users (Last 6 Months)</h2>
+            <canvas id="usersChart" height="200"></canvas>
+        </div>
+        <div class="report-chart-card">
+            <h2>New Books (Last 6 Months)</h2>
+            <canvas id="booksChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="report-charts-grid" style="margin-top:1.5rem;">
+        <div class="report-chart-card">
+            <h2>Request Status Breakdown</h2>
+            <div class="doughnut-wrap">
+                <canvas id="statusChart" height="260"></canvas>
+            </div>
+        </div>
+        <div class="report-chart-card">
+            <h2>Books by Type</h2>
+            <div class="doughnut-wrap">
+                <canvas id="typeChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP TABLES -->
+    <div class="report-tables-grid" style="margin-top:1.5rem;">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2>Top Borrowers</h2>
+            </div>
+            {% if top_borrowers %}
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Borrows</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user, count in top_borrowers %}
+                        <tr>
+                            <td>
+                                <div class="table-user-cell">
+                                    <div class="table-avatar">{{ user.name[0].upper() }}</div>
+                                    <div>
+                                        <div class="table-book-title">{{ user.name }}</div>
+                                        <div class="table-book-sub">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><strong>{{ count }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="admin-empty">No borrow data yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2>Top Book Sharers</h2>
+            </div>
+            {% if top_owners %}
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Books</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user, count in top_owners %}
+                        <tr>
+                            <td>
+                                <div class="table-user-cell">
+                                    <div class="table-avatar">{{ user.name[0].upper() }}</div>
+                                    <div>
+                                        <div class="table-book-title">{{ user.name }}</div>
+                                        <div class="table-book-sub">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><strong>{{ count }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="admin-empty">No data yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const GREEN = '#1a6b45';
+    const GREEN2 = '#2d9e6b';
+    const BLUE = '#3182ce';
+    const AMBER = '#d69e2e';
+    const RED = '#e53e3e';
+    const PURPLE = '#7c3aed';
+
+    // Users chart
+    new Chart(document.getElementById('usersChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ monthly_users | map(attribute = 'month') | list | tojson }},
+        datasets: [{
+            label: 'New Users',
+            data: {{ monthly_users | map(attribute = 'count') | list | tojson }},
+        backgroundColor: GREEN + 'cc',
+        borderColor: GREEN,
+        borderWidth: 1.5,
+        borderRadius: 6,
+    }]
+  },
+        options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+    }
+});
+
+    // Books chart
+    new Chart(document.getElementById('booksChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ monthly_books | map(attribute = 'month') | list | tojson }},
+        datasets: [{
+            label: 'New Books',
+            data: {{ monthly_books | map(attribute = 'count') | list | tojson }},
+        backgroundColor: BLUE + 'cc',
+        borderColor: BLUE,
+        borderWidth: 1.5,
+        borderRadius: 6,
+    }]
+  },
+        options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+    }
+});
+
+    // Status doughnut
+    const statusData = {{ status_data | tojson }};
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusData).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: [AMBER + 'cc', GREEN + 'cc', RED + 'cc', BLUE + 'cc'],
+                borderColor: ['#fff', '#fff', '#fff', '#fff'],
+                borderWidth: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '65%',
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } }
+            }
+        }
+    });
+
+    // Type doughnut
+    const typeData = {{ type_data | tojson }};
+    new Chart(document.getElementById('typeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(typeData).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+            datasets: [{
+                data: Object.values(typeData),
+                backgroundColor: [PURPLE + 'cc', BLUE + 'cc'],
+                borderColor: ['#fff', '#fff'],
+                borderWidth: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '65%',
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } }
+            }
+        }
+    });
+</script>
+{% endblock %}
