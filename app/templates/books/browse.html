@@ -2,12 +2,101 @@
 {% block title %}Browse Books{% endblock %}
 
 {% block content %}
-<div class="page-container">
+
+{% if not current_user.is_authenticated and not request.args %}
+<!-- ── HERO (guests only, no filters active) ── -->
+<div class="hero">
+    <div class="hero-inner">
+        <div class="hero-text">
+            <h1 class="hero-title">Share Books,<br>Share Knowledge</h1>
+            <p class="hero-sub">
+                A community platform where book lovers share physical and digital books —
+                for free. Browse, borrow, and give back.
+            </p>
+            <div class="hero-btns">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get Started Free</a>
+                <a href="#browse-section" class="btn btn-ghost btn-lg">Browse Books</a>
+            </div>
+        </div>
+        <div class="hero-cards">
+            <div class="hero-card" style="--delay:0s">
+                <div class="hero-card-cover" style="background:#1a6b45;"></div>
+                <div class="hero-card-body">
+                    <span class="badge badge-physical">Physical</span>
+                    <div class="hero-card-title">Atomic Habits</div>
+                    <div class="hero-card-author">James Clear</div>
+                </div>
+            </div>
+            <div class="hero-card hero-card-mid" style="--delay:0.15s">
+                <div class="hero-card-cover" style="background:#2d6a8c;"></div>
+                <div class="hero-card-body">
+                    <span class="badge badge-digital">Digital</span>
+                    <div class="hero-card-title">Deep Work</div>
+                    <div class="hero-card-author">Cal Newport</div>
+                </div>
+            </div>
+            <div class="hero-card" style="--delay:0.3s">
+                <div class="hero-card-cover" style="background:#7b3fa0;"></div>
+                <div class="hero-card-body">
+                    <span class="badge badge-physical">Physical</span>
+                    <div class="hero-card-title">The Alchemist</div>
+                    <div class="hero-card-author">Paulo Coelho</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<div class="how-it-works">
+    <div class="hiw-inner">
+        <h2 class="hiw-title">How It Works</h2>
+        <p class="hiw-sub">Three simple steps to start sharing and borrowing</p>
+        <div class="hiw-steps">
+            <div class="hiw-step">
+                <div class="hiw-icon" style="background:#d4edda;color:#1a6b45;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                </div>
+                <h3>Create an Account</h3>
+                <p>Sign up in seconds. No credit card, no fees — completely free.</p>
+            </div>
+            <div class="hiw-connector"></div>
+            <div class="hiw-step">
+                <div class="hiw-icon" style="background:#bee3f8;color:#2a4365;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                </div>
+                <h3>List or Browse Books</h3>
+                <p>Share books from your shelf or discover titles shared by others nearby.</p>
+            </div>
+            <div class="hiw-connector"></div>
+            <div class="hiw-step">
+                <div class="hiw-icon" style="background:#feebc8;color:#7b341e;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                </div>
+                <h3>Borrow &amp; Return</h3>
+                <p>Request a book, agree on a pickup, read it, and return when done.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ── BROWSE SECTION ── -->
+<div class="page-container" id="browse-section">
 
     <div class="browse-header">
         <div>
             <h1>Browse Books</h1>
-            <p>Discover books shared by our community members</p>
+            <p>Discover books shared by community members</p>
         </div>
         {% if current_user.is_authenticated %}
         <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">
@@ -17,17 +106,19 @@
             </svg>
             Add Book
         </a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Join to Add Books</a>
         {% endif %}
     </div>
 
     <div class="browse-layout">
 
-        <!-- FILTERS SIDEBAR -->
+        <!-- SIDEBAR -->
         <aside class="filter-sidebar">
             <form method="GET" action="{{ url_for('books.browse') }}" id="filterForm">
                 <div class="filter-header">
                     <span class="filter-title">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                         </svg>
@@ -39,7 +130,7 @@
                 <div class="filter-group">
                     <label>Search</label>
                     <div class="input-wrap">
-                        <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8" />
                             <path d="m21 21-4.35-4.35" />
@@ -77,24 +168,25 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-full btn-sm" style="margin-top:0.5rem;">
-                    Apply
+                    Apply Filters
                 </button>
             </form>
         </aside>
 
-        <!-- BOOK GRID -->
+        <!-- BOOKS -->
         <div class="books-section">
             {% if books %}
             <div class="results-bar">
                 <span class="results-count">
                     Showing <strong>{{ pagination.total }}</strong> book{{ 's' if pagination.total != 1 }}
+                    {% if search %} for "<em>{{ search }}</em>"{% endif %}
                 </span>
             </div>
 
             <div class="book-grid">
                 {% for book in books %}
                 <a href="{{ url_for('books.detail', book_id=book.id) }}" class="book-card">
-                    <div class="book-cover" style="background: {{ loop_color(loop.index0) }}">
+                    <div class="book-cover" style="background:{{ loop_color(loop.index0) }}">
                         <div class="book-cover-title">{{ book.title }}</div>
                         <div class="book-cover-author">{{ book.author }}</div>
                     </div>
@@ -108,7 +200,7 @@
                         <p class="book-category">{{ book.category }}</p>
                         {% if book.book_type == 'physical' and book.location %}
                         <p class="book-location">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                 <circle cx="12" cy="10" r="3" />
@@ -121,32 +213,23 @@
                 {% endfor %}
             </div>
 
-            <!-- PAGINATION -->
             {% if pagination.pages > 1 %}
             <div class="pagination">
                 {% if pagination.has_prev %}
-                <a href="{{ url_for('books.browse', page=pagination.prev_num, search=search, category=selected_category or '', type=selected_type or '', availability=selected_avail or '') }}"
-                    class="page-btn">
-                    &larr; Prev
-                </a>
+                <a href="{{ url_for('books.browse', page=pagination.prev_num, search=search, category=selected_category, type=selected_type, availability=selected_avail) }}"
+                    class="page-btn">&larr; Prev</a>
                 {% endif %}
-
                 {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if p %}
-                <a href="{{ url_for('books.browse', page=p, search=search, category=selected_category or '', type=selected_type or '', availability=selected_avail or '') }}"
-                    class="page-btn {{ 'page-btn-active' if p == pagination.page }}">
-                    {{ p }}
-                </a>
+                <a href="{{ url_for('books.browse', page=p, search=search, category=selected_category, type=selected_type, availability=selected_avail) }}"
+                    class="page-btn {{ 'page-btn-active' if p == pagination.page }}">{{ p }}</a>
                 {% else %}
                 <span class="page-ellipsis">…</span>
                 {% endif %}
                 {% endfor %}
-
                 {% if pagination.has_next %}
-                <a href="{{ url_for('books.browse', page=pagination.next_num, search=search, category=selected_category or '', type=selected_type or '', availability=selected_avail or '') }}"
-                    class="page-btn">
-                    Next &rarr;
-                </a>
+                <a href="{{ url_for('books.browse', page=pagination.next_num, search=search, category=selected_category, type=selected_type, availability=selected_avail) }}"
+                    class="page-btn">Next &rarr;</a>
                 {% endif %}
             </div>
             {% endif %}
@@ -165,6 +248,9 @@
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('books.add_book') }}" class="btn btn-primary" style="margin-top:1rem;">Add a
                     Book</a>
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="margin-top:1rem;">Join &amp; Add
+                    Books</a>
                 {% endif %}
                 {% endif %}
             </div>

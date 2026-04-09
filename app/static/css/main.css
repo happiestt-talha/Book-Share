@@ -2825,3 +2825,381 @@ a:hover {
         min-width: unset;
     }
 }
+
+/* ============================================
+   PHASE 7 — POLISH, HERO, HOW-IT-WORKS
+   ============================================ */
+
+/* --- HERO SECTION --- */
+.hero {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+    padding: 4rem 1.5rem 3.5rem;
+    overflow: hidden;
+}
+
+.hero-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+}
+
+.hero-sub {
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    max-width: 440px;
+}
+
+.hero-btns {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.hero-btns .btn-ghost {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.hero-btns .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: white;
+    color: white;
+}
+
+/* Hero book cards */
+.hero-cards {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.hero-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    width: 140px;
+    box-shadow: var(--shadow-lg);
+    animation: heroFloat var(--delay, 0s) ease-in-out infinite;
+    animation-duration: 3s;
+    animation-delay: var(--delay, 0s);
+}
+
+.hero-card-mid {
+    margin-bottom: 1.5rem;
+}
+
+@keyframes heroFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.hero-card-cover {
+    height: 100px;
+}
+
+.hero-card-body {
+    padding: 0.65rem 0.75rem;
+}
+
+.hero-card-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-top: 0.3rem;
+    color: var(--text-primary);
+}
+
+.hero-card-author {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* --- HOW IT WORKS --- */
+.how-it-works {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border);
+    padding: 3.5rem 1.5rem;
+}
+
+.hiw-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.hiw-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.hiw-sub {
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+}
+
+.hiw-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.hiw-step {
+    flex: 1;
+    max-width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1rem;
+}
+
+.hiw-step h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.hiw-step p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.hiw-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hiw-connector {
+    flex-shrink: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+    top: -28px;
+}
+
+.hiw-connector::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--border-mid);
+    border-top: 2px solid var(--border-mid);
+    transform: rotate(45deg);
+}
+
+/* --- GLOBAL POLISH --- */
+
+/* Smoother focus rings */
+*:focus-visible {
+    outline: 2px solid var(--green-main);
+    outline-offset: 2px;
+}
+
+/* Selection color */
+::selection {
+    background: var(--green-light);
+    color: var(--green-dark);
+}
+
+/* Better scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-mid);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Loading state for buttons */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* --- BACK TO TOP BUTTON --- */
+.back-to-top {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--green-main);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 50;
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.back-to-top:hover {
+    background: var(--green-dark);
+}
+
+/* --- RESPONSIVE FINAL PASS --- */
+@media (max-width: 900px) {
+    .hero-inner {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+    }
+
+    .hero-sub {
+        margin: 0 auto 1.5rem;
+    }
+
+    .hero-btns {
+        justify-content: center;
+    }
+
+    .hero-cards {
+        justify-content: center;
+    }
+
+    .hiw-steps {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .hiw-connector {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 2.5rem 1rem 2rem;
+    }
+
+    .hero-title {
+        font-size: 1.9rem;
+    }
+
+    .hero-cards {
+        display: none;
+    }
+
+    .browse-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 1.6rem;
+    }
+
+    .hero-btns {
+        flex-direction: column;
+    }
+
+    .hero-btns .btn {
+        width: 100%;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+/* ============================================
+   TC012 FIX — LENDING SECTION STYLES
+   ============================================ */
+
+.lending-section-header {
+    margin-bottom: 1.25rem;
+}
+
+.lending-section-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+
+.lending-section-header p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.lending-divider {
+    border-top: 2px dashed var(--border);
+    margin: 2rem 0 2rem;
+}
+
+.lending-card {
+    border-color: var(--green-light);
+    background: var(--green-pale);
+}
+
+.lending-card:hover {
+    border-color: var(--green-main);
+}
+
+.lending-borrower-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.65rem;
+}

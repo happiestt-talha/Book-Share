@@ -226,15 +226,5 @@
     const today = new Date().toISOString().split('T')[0];
     const dateInput = document.getElementById('proposed_date');
     if (dateInput) dateInput.min = today;
-
-    function openBorrowModal() {
-        const m = document.getElementById('borrowModal');
-        if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
-    }
-    function closeBorrowModal(e) {
-        if (e && e.target !== document.getElementById('borrowModal')) return;
-        const m = document.getElementById('borrowModal');
-        if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
-    }
 </script>
 {% endblock %}

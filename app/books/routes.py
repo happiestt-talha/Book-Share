@@ -231,7 +231,7 @@ def my_books():
 @login_required
 def dashboard():
     from app.borrow.routes import check_auto_returns
-    from datetime import timedelta
+    from datetime import timedelta, datetime
     check_auto_returns()
 
     # Stats
@@ -259,8 +259,7 @@ def dashboard():
         BorrowRequest.status == 'pending'
     ).order_by(BorrowRequest.created_at.desc()).all()
 
-    # My active borrows
-    from app.models import BorrowRequest as BR
+    # Books I borrowed from others (active)
     active_borrow_list = BorrowRequest.query.filter_by(
         borrower_id=current_user.id, status='accepted'
     ).order_by(BorrowRequest.accepted_at.desc()).all()
@@ -270,10 +269,15 @@ def dashboard():
         deadline  = None
         days_left = None
         if req.book.book_type == 'digital' and req.accepted_at:
-            from datetime import datetime
             deadline  = req.accepted_at + timedelta(days=7)
             days_left = (deadline - datetime.utcnow()).days
         borrow_data.append({'req': req, 'deadline': deadline, 'days_left': days_left})
+
+    # Books others are borrowing FROM me (active lendings)
+    active_lendings = BorrowRequest.query.join(Book).filter(
+        Book.owner_id == current_user.id,
+        BorrowRequest.status == 'accepted'
+    ).order_by(BorrowRequest.accepted_at.desc()).all()
 
     # Recent notifications (5)
     recent_notifs = Notification.query.filter_by(
@@ -288,6 +292,7 @@ def dashboard():
                            my_books=my_books,
                            pending_requests=pending_requests,
                            borrow_data=borrow_data,
+                           active_lendings=active_lendings,
                            recent_notifs=recent_notifs)
 
 
